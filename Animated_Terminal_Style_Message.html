@@ -1,62 +1,121 @@
-
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Şifre Korumalı Terminal</title>
+    <title>Matrix Tarzı Terminal</title>
     <style>
         body {
-            background-color: black;
-            color: #00ff00;
-            font-family: "Courier New", Courier, monospace;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
             margin: 0;
+            padding: 0;
+            background-color: black;
+            color: white;
+            font-family: "Courier New", Courier, monospace;
+            overflow: hidden;
         }
+
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
         #terminal {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
             width: 80%;
             max-width: 800px;
-            height: 400px;
-            border: 2px solid #00ff00;
             padding: 10px;
-            overflow-y: auto;
+            background-color: rgba(0, 0, 0, 0.8);
             white-space: pre-wrap;
-            text-align: left;
-            font-size: 16px;
+            font-size: 18px;
+            display: none;
+            /* Hidden initially */
         }
+
         input {
-            background-color: black;
-            border: 2px solid #00ff00;
-            color: #00ff00;
-            font-size: 16px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 18px;
             padding: 5px;
-            outline: none;
-            margin-top: 10px;
-        }
-        button {
+            border: 2px solid white;
+            color: white;
             background-color: black;
-            border: 2px solid #00ff00;
-            color: #00ff00;
-            font-size: 16px;
-            padding: 5px 10px;
-            cursor: pointer;
-            margin-top: 10px;
+            outline: none;
         }
+
+        button {
+            position: absolute;
+            top: calc(50% + 40px);
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 18px;
+            padding: 5px 10px;
+            border: 2px solid white;
+            color: white;
+            background-color: black;
+            outline: none;
+        }
+
         button:hover {
-            background-color: #00ff00;
+            background-color: white;
             color: black;
         }
     </style>
 </head>
+
 <body>
+    <canvas id="matrix"></canvas>
     <div id="terminal"></div>
     <input type="password" id="password" placeholder="Şifre" />
     <button onclick="startTerminal()">Göster</button>
+    <audio id="bg-music" loop>
+        <source src="https://www.bensound.com/bensound-music/bensound-slowmotion.mp3" type="audio/mp3">
+        Your browser does not support the audio element.
+    </audio>
+
     <script>
+        // Matrix animation
+        const canvas = document.getElementById('matrix');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const katakana = 'アカサタナハマヤラワ0123456789';
+        const latin = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        const alphabet = katakana + latin;
+
+        const fontSize = 16;
+        const columns = canvas.width / fontSize;
+
+        const rainDrops = new Array(Math.floor(columns)).fill(1);
+
+        function drawMatrix() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = '#0f0'; // Green matrix effect
+            ctx.font = fontSize + 'px monospace';
+
+            for (let i = 0; i < rainDrops.length; i++) {
+                const text = alphabet.charAt(Math.floor(Math.random() * alphabet.length));
+                ctx.fillText(text, i * fontSize, rainDrops[i] * fontSize);
+
+                if (rainDrops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                    rainDrops[i] = 0;
+                }
+                rainDrops[i]++;
+            }
+        }
+
+        setInterval(drawMatrix, 50);
+
+        // Terminal message with synchronized typewriter sound
         const message = `
 Candan,
 
@@ -68,19 +127,34 @@ Bu kitap, yolculuğunda sana ilham ve rehberlik etsin. Başarılarının devamı
 MÇ
 `;
 
+        const terminal = document.getElementById("terminal");
+        const typingSound = new Audio('https://www.soundjay.com/button/beep-07.mp3'); // Typing sound effect
+        const bgMusic = document.getElementById("bg-music");
+
         function startTerminal() {
             const input = document.getElementById("password").value;
             const correctPassword = "CandanK.2025";
-            const terminal = document.getElementById("terminal");
-            terminal.innerHTML = ""; // Clear terminal
-            
+            const passwordInput = document.getElementById("password");
+            const button = document.querySelector("button");
+
             if (input === correctPassword) {
+                passwordInput.style.display = "none"; // Hide password input
+                button.style.display = "none"; // Hide button
+                terminal.style.display = "block"; // Show terminal
+                bgMusic.play().catch(() => {
+                    alert("Lütfen müzik çalmak için bir eylem gerçekleştirin!");
+                });
+
                 let i = 0;
                 function typeEffect() {
                     if (i < message.length) {
                         terminal.innerHTML += message[i];
+                        if (message[i] !== ' ' && message[i] !== '\\n') {
+                            typingSound.currentTime = 0; // Reset sound to start
+                            typingSound.play().catch(() => { }); // Ensure sound plays without interruption
+                        }
                         i++;
-                        setTimeout(typeEffect, 50); // Adjust typing speed here
+                        setTimeout(typeEffect, 100); // Adjust typing speed here
                     }
                 }
                 typeEffect();
@@ -90,4 +164,5 @@ MÇ
         }
     </script>
 </body>
+
 </html>
